@@ -33,6 +33,19 @@ async function run() {
         const surveyCollection = client.db('surveyMaster').collection('surveys');
 
 
+        app.get('/surveys', async (req, res) => {
+            const result = await surveyCollection.find().toArray();
+            res.send(result);
+        })
+
+
+
+        app.get('/surveys/surveyDetails/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await surveyCollection.findOne(query);
+            res.send(result);
+        })
 
     } finally {
         // Ensures that the client will close when you finish/error
