@@ -31,6 +31,29 @@ async function run() {
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
         const surveyCollection = client.db('surveyMaster').collection('surveys');
+        const userCollection = client.db('surveyMaster').collection('users');
+
+        //JWT releted api
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
+                expiresIn: "1h"
+            });
+            res.send({ token });
+        })
+
+
+        //user releted api
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const query = { email: user.email };
+            const existingUser = await userCollection.findOne(query);
+            if (existingUser) {
+                return res.send({ message: "User already exist!", insertedId: null });
+            }
+            const result = await userCollection.insertOne(user);
+            res.send(result);
+        })
 
 
         app.get('/surveys', async (req, res) => {
@@ -38,14 +61,19 @@ async function run() {
             res.send(result);
         })
 
-
-
         app.get('/surveys/surveyDetails/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await surveyCollection.findOne(query);
             res.send(result);
         })
+
+
+        //Vote to a survey
+        app.post('/vote', async (req, res) => {
+
+        })
+
 
     } finally {
         // Ensures that the client will close when you finish/error
