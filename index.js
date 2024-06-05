@@ -44,6 +44,13 @@ async function run() {
 
 
         //user releted api
+        //get users data
+        app.get('/users', async (req, res) => {
+            const result = await userCollection.find().toArray();
+            res.send(result);
+        })
+
+        //Post user to mongodb
         app.post('/users', async (req, res) => {
             const user = req.body;
             const query = { email: user.email };
