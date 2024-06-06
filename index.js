@@ -4,6 +4,8 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
 
 app.use(cors());
 app.use(express.json());
@@ -32,6 +34,8 @@ async function run() {
 
         const surveyCollection = client.db('surveyMaster').collection('surveys');
         const userCollection = client.db('surveyMaster').collection('users');
+        const paymentCollection = client.db('surveyMaster').collection('payments');
+
 
         //JWT releted api
         app.post('/jwt', async (req, res) => {
@@ -91,7 +95,7 @@ async function run() {
         })
 
         //getting user status is admin or not
-        app.get('/users/admin/:email', verifyToken, verifyAdmin, async (req, res) => {
+        app.get('/users/admin/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
             if (email !== req.decoded.email) {
                 return res.status(403).send({ message: "forbidden access" });
@@ -104,6 +108,7 @@ async function run() {
             }
             res.send({ admin });
         })
+
 
         app.get('/surveys', async (req, res) => {
             const result = await surveyCollection.find().toArray();
@@ -142,6 +147,32 @@ async function run() {
         app.post('/vote', async (req, res) => {
 
         })
+
+
+
+        //Payment integration======
+        app.post('/create-payment-intent', async (req, res) => {
+            const { price } = req.body;
+            const amount = parseInt(price * 100);  //as stripe calculate Poisha/Cent
+            console.log("amount inside the intent", amount);
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            })
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+        })
+
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const paymentResult = await paymentCollection.insertOne(payment);
+            console.log(paymentResult);
+            res.send(paymentResult);
+        })
+
 
 
     } finally {
