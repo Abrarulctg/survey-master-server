@@ -71,7 +71,7 @@ async function run() {
         }
 
 
-        //user releted api
+        //============user releted api===============
         //get users data
         app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
             const result = await userCollection.find().toArray();
@@ -107,6 +107,15 @@ async function run() {
 
         app.get('/surveys', async (req, res) => {
             const result = await surveyCollection.find().toArray();
+            res.send(result);
+        })
+
+
+        //Delete a user by admin 
+        app.delete('/users/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await userCollection.deleteOne(query);
             res.send(result);
         })
 
