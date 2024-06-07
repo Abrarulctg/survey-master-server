@@ -109,7 +109,37 @@ async function run() {
             res.send({ admin });
         })
 
+        //getting user status is Surveyor or not
+        app.get('/users/surveyor/:email', verifyToken, async (req, res) => {
+            const email = req.params.email;
+            if (email !== req.decoded.email) {
+                return res.status(403).send({ message: "forbidden access" });
+            }
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            let surveyor = false;
+            if (user) {
+                surveyor = user?.role === 'surveyor'
+            }
+            res.send({ surveyor });
+        })
+        //getting user status is pro-user or not
+        app.get('/users/proUser/:email', verifyToken, async (req, res) => {
+            const email = req.params.email;
+            if (email !== req.decoded.email) {
+                return res.status(403).send({ message: "forbidden access" });
+            }
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            let proUser = false;
+            if (user) {
+                proUser = user?.role === 'pro-user'
+            }
+            res.send({ proUser });
+        })
 
+
+        // get all surveys from db
         app.get('/surveys', async (req, res) => {
             const result = await surveyCollection.find().toArray();
             res.send(result);
@@ -117,7 +147,7 @@ async function run() {
 
 
         //update user role
-        app.patch('/users/admin/:id', async (req, res) => {
+        app.patch('/users/admin/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const updateDoc = {
@@ -191,7 +221,7 @@ async function run() {
 
 
         //Update payment status from Admin dashboard
-        app.patch('/payments/:id', async (req, res) => {
+        app.patch('/payments/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const updateDoc = {
@@ -202,8 +232,7 @@ async function run() {
         })
 
         //Update user role from Admin dashboard
-
-        app.patch('/users/:email', async (req, res) => {
+        app.patch('/users/:email', verifyToken, verifyAdmin, async (req, res) => {
             const email = req.params.email;
             const filter = { email: email };
             const updateDoc = {
