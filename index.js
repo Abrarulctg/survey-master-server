@@ -176,6 +176,12 @@ async function run() {
             res.send(result);
         })
 
+        //get all payment details for Admin
+        app.get('/payments', verifyToken, async (req, res) => {
+            const result = await paymentCollection.find().toArray();
+            res.send(result);
+        })
+
         app.post('/payments', async (req, res) => {
             const payment = req.body;
             const paymentResult = await paymentCollection.insertOne(payment);
@@ -184,6 +190,28 @@ async function run() {
         })
 
 
+        //Update payment status from Admin dashboard
+        app.patch('/payments/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: { status: 'approved' }
+            }
+            const result = await paymentCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+
+        //Update user role from Admin dashboard
+
+        app.patch('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const updateDoc = {
+                $set: { role: "pro-user" }
+            }
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result)
+        })
 
     } finally {
         // Ensures that the client will close when you finish/error
