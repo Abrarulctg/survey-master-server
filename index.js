@@ -206,16 +206,23 @@ async function run() {
 
 
         //Update survey by surveyor
-        app.patch('surveyor/update/:id', verifyToken, async (req, res) => {
+        app.patch('/surveyor/update/:id', async (req, res) => {
+            const updatedSurvey = req.body;
             const id = req.params.id;
-            // const filter = { _id: new ObjectId(id) };
-            // const updateDoc = {
-            //     $set: {
-            //         role: "pro-user"
-            //     }
-            // }
-            // const result = await userCollection.updateOne(filter, updateDoc);
-            // res.send(result)
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    title: updatedSurvey.title,
+                    description: updatedSurvey.description,
+                    surveyStatus: updatedSurvey.surveyStatus,
+                    category: updatedSurvey.category,
+                    deadline: updatedSurvey.deadline,
+                    surveyStatus: updatedSurvey.surveyStatus,
+                    updatedOn: updatedSurvey.updatedOn
+                }
+            }
+            const result = await surveyCollection.updateOne(filter, updateDoc);
+            res.send(result)
         })
 
         //Vote to a survey
