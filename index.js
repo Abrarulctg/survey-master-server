@@ -123,6 +123,7 @@ async function run() {
             }
             res.send({ surveyor });
         })
+
         //getting user status is pro-user or not
         app.get('/users/proUser/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
@@ -138,15 +139,7 @@ async function run() {
             res.send({ proUser });
         })
 
-
-        // get all surveys from db
-        app.get('/surveys', async (req, res) => {
-            const result = await surveyCollection.find().toArray();
-            res.send(result);
-        })
-
-
-        //update user role
+        //update user role to surveyor
         app.patch('/users/admin/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
@@ -155,6 +148,18 @@ async function run() {
             }
             const result = await userCollection.updateOne(filter, updateDoc);
             res.send(result);
+        })
+
+
+        //Update normal user role to pro-user from Admin dashboard
+        app.patch('/users/:email', verifyToken, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const updateDoc = {
+                $set: { role: "pro-user" }
+            }
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result)
         })
 
         //Delete a user by admin 
@@ -167,6 +172,12 @@ async function run() {
 
 
         //==================Survey Releted api ==================
+        // get all surveys from db
+        app.get('/surveys', async (req, res) => {
+            const result = await surveyCollection.find().toArray();
+            res.send(result);
+        })
+        //get survey by id
         app.get('/surveys/surveyDetails/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -174,11 +185,15 @@ async function run() {
             res.send(result);
         })
 
-        app.post('/payments', async (req, res) => {
-            const payment = req.body;
-            const paymentResult = await paymentCollection.insertOne(payment);
-            console.log(paymentResult);
-            res.send(paymentResult);
+
+        //get survey by email
+        app.get('/surveyor/surveys/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { createdBy: email };
+            console.log(query)
+            const result = await surveyCollection.find(query).toArray();
+            console.log(result)
+            res.send(result);
         })
 
         //Post a survey by surveyor
@@ -189,6 +204,20 @@ async function run() {
             res.send(surveyResult);
         })
 
+
+        //Update survey by surveyor
+        app.patch('surveyor/update/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            // const filter = { _id: new ObjectId(id) };
+            // const updateDoc = {
+            //     $set: {
+            //         role: "pro-user"
+            //     }
+            // }
+            // const result = await userCollection.updateOne(filter, updateDoc);
+            // res.send(result)
+        })
+
         //Vote to a survey
         app.post('/vote', async (req, res) => {
 
@@ -197,7 +226,7 @@ async function run() {
 
 
         //Payment integration======
-        app.post('/create-payment-intent', async (req, res) => {
+        app.post('/create-payment-intent', verifyToken, async (req, res) => {
             const { price } = req.body;
             const amount = parseInt(price * 100);  //as stripe calculate Poisha/Cent
             console.log("amount inside the intent", amount);
@@ -247,16 +276,6 @@ async function run() {
             res.send(result);
         })
 
-        //Update user role from Admin dashboard
-        app.patch('/users/:email', verifyToken, verifyAdmin, async (req, res) => {
-            const email = req.params.email;
-            const filter = { email: email };
-            const updateDoc = {
-                $set: { role: "pro-user" }
-            }
-            const result = await userCollection.updateOne(filter, updateDoc);
-            res.send(result)
-        })
 
     } finally {
         // Ensures that the client will close when you finish/error
