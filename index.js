@@ -35,6 +35,7 @@ async function run() {
         const surveyCollection = client.db('surveyMaster').collection('surveys');
         const userCollection = client.db('surveyMaster').collection('users');
         const paymentCollection = client.db('surveyMaster').collection('payments');
+        const voteCollection = client.db('surveyMaster').collection('votes');
 
 
         //JWT releted api
@@ -225,10 +226,53 @@ async function run() {
             res.send(result)
         })
 
-        //Vote to a survey
-        app.post('/vote', async (req, res) => {
-
+        //Delete a survey by surveyor 
+        app.delete('/surveys/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await surveyCollection.deleteOne(query);
+            res.send(result);
         })
+
+
+
+        // Perform Vote api
+        app.get('/vote/check/:surveyId/:userEmail', async (req, res) => {
+            const { surveyId, userEmail } = req.params;
+            const vote = await voteCollection.findOne({ surveyId, userEmail });
+            if (vote) {
+                res.send({ hasVoted: true });
+            } else {
+                res.send({ hasVoted: false });
+            }
+        })
+
+
+        //Vote to a survey
+        // app.post('/vote', verifyToken, async (req, res) => {
+        //     const vote = req.body;
+        //     const voteResult = await voteCollection.insertOne(vote);
+        //     console.log(voteResult);
+        //     res.send(voteResult);
+        // })
+
+        app.post('/vote', verifyToken, async (req, res) => {
+            const { surveyId, userEmail } = req.body;
+            const existingVote = await voteCollection.findOne({ surveyId, userEmail });
+            if (existingVote) {
+                res.status(401).send({ message: "You have already voted on this survey!" });
+            } else {
+                const voteResult = await voteCollection.insertOne(req.body);
+                console.log(voteResult);
+                res.send(voteResult);
+            }
+        })
+
+
+
+
+
+
 
 
 
