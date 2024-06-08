@@ -165,6 +165,8 @@ async function run() {
             res.send(result);
         })
 
+
+        //==================Survey Releted api ==================
         app.get('/surveys/surveyDetails/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -172,6 +174,20 @@ async function run() {
             res.send(result);
         })
 
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const paymentResult = await paymentCollection.insertOne(payment);
+            console.log(paymentResult);
+            res.send(paymentResult);
+        })
+
+        //Post a survey by surveyor
+        app.post('/surveys', async (req, res) => {
+            const survey = req.body;
+            const surveyResult = await surveyCollection.insertOne(survey);
+            console.log(surveyResult);
+            res.send(surveyResult);
+        })
 
         //Vote to a survey
         app.post('/vote', async (req, res) => {
