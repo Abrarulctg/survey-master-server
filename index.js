@@ -7,7 +7,17 @@ require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 
-app.use(cors());
+// app.use(cors());
+app.use(
+    cors({
+        origin: [
+            "http://localhost:5173",
+            "https://survey-master-abrar.firebaseapp.com",
+            "https://survey-master-abrar.web.app",
+            "https://survey-master.netlify.app",
+        ]
+    })
+);
 app.use(express.json());
 
 
@@ -27,9 +37,9 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
         const surveyCollection = client.db('surveyMaster').collection('surveys');
@@ -277,7 +287,33 @@ async function run() {
         })
 
 
+        //Get participated survey by userEmail
+        app.get('/user/surveys/:email', async (req, res) => {
+            const email = req.params.email;
+            const userVotes = await voteCollection.find({ userEmail: email }).toArray();
+            const surveyIds = userVotes.map(vote => vote.surveyId);
+            // console.log(userVotes)
+            const surveys = await surveyCollection.find({
+                _id: {
+                    $in: surveyIds.map(id => new ObjectId(id))
+                }
+            }).toArray();
+            const userSurveys = surveys.map(survey => {
+                const vote = userVotes.find(vote => vote.surveyId === survey._id.toString());
+                return { ...survey, vote: vote ? vote.vote : null };
+            });
+            // console.log("user surveys :", userSurveys)
+            res.send(userSurveys);
+        })
 
+        // app.get('/user/surveys/:email', async (req, res) => {
+        //     const email = req.params.email;
+        //     const query = { userEmail: email };
+        //     console.log(query);
+        //     const result = await voteCollection.find(query).toArray();
+        //     console.log(result)
+        //     res.send(result);
+        // })
 
 
 
