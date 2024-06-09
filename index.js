@@ -175,7 +175,7 @@ async function run() {
         //==================Survey Releted api ==================
         // get all surveys from db
         app.get('/surveys', async (req, res) => {
-            const result = await surveyCollection.find().toArray();
+            const result = await surveyCollection.find({ surveyStatus: 'publish' }).toArray();
             res.send(result);
         })
         //get survey by id
@@ -236,7 +236,7 @@ async function run() {
 
 
 
-        // Perform Vote api
+        // check if user has voted to this survey or not
         app.get('/vote/check/:surveyId/:userEmail', async (req, res) => {
             const { surveyId, userEmail } = req.params;
             const vote = await voteCollection.findOne({ surveyId, userEmail });
@@ -256,15 +256,23 @@ async function run() {
         //     res.send(voteResult);
         // })
 
+        // Perform a Vote api
         app.post('/vote', verifyToken, async (req, res) => {
-            const { surveyId, userEmail } = req.body;
+            const { surveyId, userEmail, vote } = req.body;
             const existingVote = await voteCollection.findOne({ surveyId, userEmail });
             if (existingVote) {
                 res.status(401).send({ message: "You have already voted on this survey!" });
             } else {
                 const voteResult = await voteCollection.insertOne(req.body);
+
+                //update voteCout
+                const updateCount = vote === 'yes' ? { yesOption: 1 } : { noOption: 1 };
+                const updateResult = await surveyCollection.updateOne(
+                    { _id: new ObjectId(surveyId) },
+                    { $inc: updateCount }
+                )
                 console.log(voteResult);
-                res.send(voteResult);
+                res.send({ voteResult, updateResult });
             }
         })
 
