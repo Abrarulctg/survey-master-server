@@ -196,6 +196,15 @@ async function run() {
             res.send(result);
         })
 
+        //get 6 most recently added surveys:
+        app.get('/surveys/recent', async (req, res) => {
+            const recentSurveys = await surveyCollection.find()
+                .sort({ createdOn: -1 })
+                .limit(6)
+                .toArray();
+            console.log(recentSurveys)
+            res.send(recentSurveys);
+        })
 
         //get survey by email
         app.get('/surveyor/surveys/:email', async (req, res) => {
