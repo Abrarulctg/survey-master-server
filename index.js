@@ -46,6 +46,7 @@ async function run() {
         const userCollection = client.db('surveyMaster').collection('users');
         const paymentCollection = client.db('surveyMaster').collection('payments');
         const voteCollection = client.db('surveyMaster').collection('votes');
+        const feedbackCollection = client.db('surveyMaster').collection('feedbacks');
 
 
         //JWT releted api
@@ -182,10 +183,42 @@ async function run() {
         })
 
 
+
+        //Update Survey status from Admin dashboard
+        app.patch('/admin/survey/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const { feedbackMessage } = req.body;
+            const updateDoc = {
+                $set: {
+                    surveyStatus: 'unpublish',
+                    feedbackMessage: feedbackMessage
+
+                }
+            };
+            try {
+                const result = await surveyCollection.updateOne(filter, updateDoc);
+                res.send(result);
+            } catch (error) {
+                console.error("Error updating survey: ", error);
+                res.status(500).send({ error: "Internal server error" });
+            }
+
+
+        });
+
+
+
+
+
         //==================Survey Releted api ==================
         // get all surveys from db
         app.get('/surveys', async (req, res) => {
             const result = await surveyCollection.find({ surveyStatus: 'publish' }).toArray();
+            res.send(result);
+        })
+        app.get('/dashboard/admin/surveys', async (req, res) => {
+            const result = await surveyCollection.find().toArray();
             res.send(result);
         })
         //get survey by id
@@ -207,7 +240,7 @@ async function run() {
         })
 
         //get survey by email
-        app.get('/surveyor/surveys/:email', async (req, res) => {
+        app.get('/surveyor/surveys/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
             const query = { createdBy: email };
             console.log(query)
@@ -267,13 +300,6 @@ async function run() {
         })
 
 
-        //Vote to a survey
-        // app.post('/vote', verifyToken, async (req, res) => {
-        //     const vote = req.body;
-        //     const voteResult = await voteCollection.insertOne(vote);
-        //     console.log(voteResult);
-        //     res.send(voteResult);
-        // })
 
         // Perform a Vote api
         app.post('/vote', verifyToken, async (req, res) => {
@@ -314,17 +340,6 @@ async function run() {
             // console.log("user surveys :", userSurveys)
             res.send(userSurveys);
         })
-
-        // app.get('/user/surveys/:email', async (req, res) => {
-        //     const email = req.params.email;
-        //     const query = { userEmail: email };
-        //     console.log(query);
-        //     const result = await voteCollection.find(query).toArray();
-        //     console.log(result)
-        //     res.send(result);
-        // })
-
-
 
 
 
