@@ -249,6 +249,37 @@ async function run() {
             res.send(result);
         })
 
+        // surveys/surveyResponses
+        //display survey response on clicking surveyDetail from surveyor dashboard
+        app.get('/dashboard/surveyor/surveys/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { surveyId: id };
+            console.log(query);
+            const result = await voteCollection.find(query).toArray();
+            res.send(result);
+        })
+
+
+        // // get vote response at surveyor dashboard
+        // app.get('/user/surveys/responses', verifyToken, async (req, res) => {
+        //     const userEmail = req.user.email;
+        //     try {
+        //         const userSurveys = await surveyCollection.find({ createdBy: userEmail }).toArray();
+        //         const surveyIds = userSurveys.map(survey => survey._id);
+        //         const surveyResponses = await voteCollection.find({ surveyId: { $in: surveyIds } }).toArray();
+
+        //         const surveysWithResponses = userSurveys.map(survey => {
+        //             const responses = surveyResponses.filter(response => response.surveyId.toString() === survey._id.toString());
+        //             return { ...survey, responses };
+        //         });
+        //         res.send(surveysWithResponses);
+        //     } catch (error) {
+        //         console.error('Error fatching survey responses:', error);
+        //         res.status(500).send({ error: "Internal server error" });
+        //     }
+        // });
+
+
         //Post a survey by surveyor
         app.post('/surveys', async (req, res) => {
             const survey = req.body;
@@ -394,6 +425,7 @@ async function run() {
             const result = await paymentCollection.updateOne(filter, updateDoc);
             res.send(result);
         })
+
 
 
     } finally {
