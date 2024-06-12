@@ -46,7 +46,8 @@ async function run() {
         const userCollection = client.db('surveyMaster').collection('users');
         const paymentCollection = client.db('surveyMaster').collection('payments');
         const voteCollection = client.db('surveyMaster').collection('votes');
-        const feedbackCollection = client.db('surveyMaster').collection('feedbacks');
+        const commentCollection = client.db('surveyMaster').collection('comments');
+        const reportCollection = client.db('surveyMaster').collection('reports');
 
 
         //JWT releted api
@@ -221,6 +222,7 @@ async function run() {
             const result = await surveyCollection.find().toArray();
             res.send(result);
         })
+
         //get survey by id
         app.get('/surveys/surveyDetails/:id', async (req, res) => {
             const id = req.params.id;
@@ -249,7 +251,6 @@ async function run() {
             res.send(result);
         })
 
-        // surveys/surveyResponses
         //display survey response on clicking surveyDetail from surveyor dashboard
         app.get('/dashboard/surveyor/surveys/:id', async (req, res) => {
             const id = req.params.id;
@@ -260,32 +261,41 @@ async function run() {
         })
 
 
-        // // get vote response at surveyor dashboard
-        // app.get('/user/surveys/responses', verifyToken, async (req, res) => {
-        //     const userEmail = req.user.email;
-        //     try {
-        //         const userSurveys = await surveyCollection.find({ createdBy: userEmail }).toArray();
-        //         const surveyIds = userSurveys.map(survey => survey._id);
-        //         const surveyResponses = await voteCollection.find({ surveyId: { $in: surveyIds } }).toArray();
-
-        //         const surveysWithResponses = userSurveys.map(survey => {
-        //             const responses = surveyResponses.filter(response => response.surveyId.toString() === survey._id.toString());
-        //             return { ...survey, responses };
-        //         });
-        //         res.send(surveysWithResponses);
-        //     } catch (error) {
-        //         console.error('Error fatching survey responses:', error);
-        //         res.status(500).send({ error: "Internal server error" });
-        //     }
-        // });
+        // post a comment to a survey
+        app.post('/comments', async (req, res) => {
+            const commentData = req.body;
+            const commentResult = await commentCollection.insertOne(commentData);
+            console.log(commentResult);
+            res.send(commentResult);
+        })
 
 
-        //Post a survey by surveyor
-        app.post('/surveys', async (req, res) => {
-            const survey = req.body;
-            const surveyResult = await surveyCollection.insertOne(survey);
-            console.log(surveyResult);
-            res.send(surveyResult);
+
+        // get comments by email id
+        app.get('/user/comments/:email', async (req, res) => {
+            const userEmail = req.params.email;
+            const query = { userEmail: userEmail };
+            const result = await commentCollection.find(query).toArray();
+            res.send(result);
+        })
+
+
+        // post a comment to a survey
+        app.post('/reports', async (req, res) => {
+            const reportData = req.body;
+            const reportResult = await reportCollection.insertOne(reportData);
+            console.log(reportResult);
+            res.send(reportResult);
+        })
+
+        // post a comment to a survey
+        app.get('/user/reports/:email', async (req, res) => {
+            const userEmail = req.params.email;
+
+            const query = { userEmail: userEmail };
+            console.log(query);
+            const result = await reportCollection.find(query).toArray();
+            res.send(result);
         })
 
 
@@ -371,8 +381,6 @@ async function run() {
             // console.log("user surveys :", userSurveys)
             res.send(userSurveys);
         })
-
-
 
 
         //Payment integration======
