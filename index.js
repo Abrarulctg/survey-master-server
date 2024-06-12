@@ -48,6 +48,7 @@ async function run() {
         const voteCollection = client.db('surveyMaster').collection('votes');
         const commentCollection = client.db('surveyMaster').collection('comments');
         const reportCollection = client.db('surveyMaster').collection('reports');
+        const contactMessageCollection = client.db('surveyMaster').collection('contactMessages');
 
 
         //JWT releted api
@@ -251,6 +252,7 @@ async function run() {
             res.send(result);
         })
 
+
         //display survey response on clicking surveyDetail from surveyor dashboard
         app.get('/dashboard/surveyor/surveys/:id', async (req, res) => {
             const id = req.params.id;
@@ -434,6 +436,17 @@ async function run() {
             res.send(result);
         })
 
+        app.post('/contactMessage', async (req, res) => {
+            const messageInfo = req.body;
+            const messageResult = await contactMessageCollection.insertOne(messageInfo);
+            console.log(messageResult);
+            res.send(messageResult);
+        })
+        app.get('/dashboard/contactMessage', async (req, res) => {
+            const result = await contactMessageCollection.find().toArray();
+            console.log(result);
+            res.send(result);
+        })
 
 
     } finally {
